@@ -36,11 +36,9 @@ public class DefaultController implements Controller {
     /**
      * Instantiates a new Default controller.
      *
-     * @param reconciler the reconciler
      * @param workQueue the work queue
      */
-    public DefaultController(Reconciler reconciler,BlockingQueue<Request> workQueue){
-        this.reconciler = reconciler;
+    public DefaultController(BlockingQueue<Request> workQueue){
         this.workQueue = workQueue;
     }
 
