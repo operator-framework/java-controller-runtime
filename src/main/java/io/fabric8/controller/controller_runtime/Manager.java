@@ -24,12 +24,8 @@ import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 import io.fabric8.kubernetes.client.informers.SharedInformerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 /**
  * The type Controller manager manages a set of controllers' lifecycle and also their informer
@@ -39,22 +35,8 @@ public class Manager<T> implements Controller{
     private static final Logger logger = LoggerFactory.getLogger(DefaultController.class);
     private Controller[] controllers;
     private SharedInformerFactory informerFactory;
-
     private BlockingQueue<Request> workQueue;
     DefaultController defaultController;
-
-
-    public SharedIndexInformer<T> getSharedIndexInformer() {
-        return sharedIndexInformer;
-    }
-
-    public void setSharedIndexInformer(SharedIndexInformer<T> sharedIndexInformer) {
-        this.sharedIndexInformer = sharedIndexInformer;
-    }
-
-    public SharedIndexInformer<T> sharedIndexInformer;
-
-    private ExecutorService controllerThreadPool;
 
     public KubernetesClient getKubernetesClient() {
         return kubernetesClient;
@@ -66,13 +48,26 @@ public class Manager<T> implements Controller{
 
     KubernetesClient kubernetesClient;
 
+    public SharedIndexInformer<T> getPodSharedIndexInformer() {
+        return podSharedIndexInformer;
+    }
+
+    public void setPodSharedIndexInformer(SharedIndexInformer<T> podSharedIndexInformer) {
+        System.out.println("Setting pod shared index informer in controller runtime ");
+        this.podSharedIndexInformer = podSharedIndexInformer;
+    }
+
+    public SharedIndexInformer<T> podSharedIndexInformer;
+
+    private ExecutorService controllerThreadPool;
+
     /**
      * Instantiates a new Controller manager.
      *
      * @param factory the sharedinformerfactory initialized.
      * @param controllers the controllers to be managed.
      */
-    public Manager(SharedInformerFactory factory, Controller[] controllers,BlockingQueue<Request> workQueue){
+    public Manager(SharedInformerFactory factory, Controller[] controllers,BlockingQueue<Request> workQueue){//},SharedIndexInformer<T> podSharedIndexInformer) {
         this.controllers = controllers;
         this.informerFactory = factory;
         defaultController = new DefaultController(workQueue);
@@ -99,7 +94,7 @@ public class Manager<T> implements Controller{
 
         informerFactory.startAllRegisteredInformers();
 
-        sharedIndexInformer.addEventHandler(new ResourceEventHandler<T>() {
+        podSharedIndexInformer.addEventHandler(new ResourceEventHandler<T>() {
             @Override
             public void onAdd(T t) {
                 handlePodObject(t);
@@ -136,23 +131,14 @@ public class Manager<T> implements Controller{
         }
     }
 
-    /**
-     * this function will handle the request and add to the queue.
-     *
-     * @param namespace the T object
-     * @param name the T object
-     */
+
     private void addToWorkQueue(String namespace, String name){
         workQueue = defaultController.getWorkQueue();
         workQueue.add(new Request(namespace, name));
         defaultController.setWorkQueue(workQueue);
     }
 
-    /**
-     * this function will handle the request and add to the queue.
-     *
-     * @param t the T object
-     */
+
     private void handlePodObject(T t){
         OwnerReference ownerReference = getController(t);
         if(!ownerReference.getKind().equalsIgnoreCase("Podset")){

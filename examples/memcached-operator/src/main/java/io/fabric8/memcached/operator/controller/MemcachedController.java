@@ -1,3 +1,17 @@
+// Copyright 2020 The Operator-SDK Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package io.fabric8.memcached.operator.controller;
 
 import io.fabric8.controller.controller_runtime.Controller;
@@ -5,8 +19,10 @@ import io.fabric8.controller.controller_runtime.Controllers;
 import io.fabric8.controller.controller_runtime.DefaultController;
 import io.fabric8.controller.controller_runtime.Manager;
 import io.fabric8.controller.controller_runtime.pkg.Request;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.client.CustomResource;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
@@ -29,7 +45,7 @@ public class MemcachedController<T> {
     private BlockingQueue<Request> workQueue;
     private Lister<Memcached> memcachedLister;
     private Lister<Pod> podLister;
-   // private Lister<T> tLister;
+    //    private Lister<T> tLister;
     private Controller[] controllers;
     SharedInformerFactory sharedInformerFactory;
     private int workerCount = 2;
@@ -51,8 +67,8 @@ public class MemcachedController<T> {
         this.workQueue = new ArrayBlockingQueue<>(1024);
         this.memcachedLister = new Lister<>(memcachedSharedIndexInformer.getIndexer(),"default");
         this.podLister = new Lister<>(podSharedIndexInformer.getIndexer(),"default");
-     //   this.tLister = new Lister<>(tSharedIndexInformer.getIndexer(),"default");
-        defaultController = new DefaultController();
+//        this.tLister = new Lister<>(tSharedIndexInformer.getIndexer(),"default");
+        defaultController = new DefaultController(workQueue);
         this.sharedInformerFactory = sharedInformerFactory;
     }
 
@@ -69,12 +85,22 @@ public class MemcachedController<T> {
         memcachedSharedIndexInformer.addEventHandler(new ResourceEventHandler<Memcached>() {
             @Override
             public void onAdd(Memcached memcached) {
+
                 enQueueMemcached(memcached);
+//                String key = Cache.metaNamespaceKeyFunc(memcached);
+//                if(key!=null || !(key.isEmpty())) {
+//                    HasMetadata h = (HasMetadata) memcached;
+//                    workQueue = defaultController.getWorkQueue();
+//                    workQueue.add(new Request(((HasMetadata) memcached).getMetadata().getNamespace(), ((HasMetadata) memcached).getMetadata().getName()));
+//                    defaultController.setWorkQueue(workQueue);
+//                    System.out.println("on add in workqueue size" + workQueue.size());
+//                    System.out.println("on Add in Controller Runtime" + ((HasMetadata) memcached).getMetadata().getName() + "namespave" + ((HasMetadata) memcached).getMetadata().getNamespace());
+//                }
             }
 
             @Override
             public void onUpdate(Memcached memcached, Memcached newMemcached) {
-             //   enQueueMemcached(newMemcached);
+                //   enQueueMemcached(newMemcached);
             }
 
             @Override
@@ -82,24 +108,24 @@ public class MemcachedController<T> {
                 //   enQueueMemcached(newMemcached);
             }
         });
-
-        podSharedIndexInformer.addEventHandler(new ResourceEventHandler<Pod>() {
-            @Override
-            public void onAdd(Pod pod) {
-                handlePodObject(pod);
-            }
-
-            @Override
-            public void onUpdate(Pod oldPod, Pod newPod) {
-
-//                handlePodObject(newPod);
-            }
-
-            @Override
-            public void onDelete(Pod pod, boolean b) {
-                handlePodObject(pod);
-            }
-        });
+//
+//        podSharedIndexInformer.addEventHandler(new ResourceEventHandler<Pod>() {
+//            @Override
+//            public void onAdd(Pod pod) {
+//                handlePodObject(pod);
+//            }
+//
+//            @Override
+//            public void onUpdate(Pod oldPod, Pod newPod) {
+//
+////                handlePodObject(newPod);
+//            }
+//
+//            @Override
+//            public void onDelete(Pod pod, boolean b) {
+//                handlePodObject(pod);
+//            }
+//        });
     }
 
     /**
@@ -120,11 +146,14 @@ public class MemcachedController<T> {
     }
 
     public void run() throws InterruptedException {
+
         this.initializeDefaultController();
-        Manager manager = new Manager(sharedInformerFactory,controllers);
-//        manager.setPodSharedIndexInformer(memcachedSharedIndexInformer);
-//        manager.setPodSharedIndexInformer(podSharedIndexInformer);
-       // getController().clone()
+        Manager manager = new Manager(sharedInformerFactory,controllers,workQueue);
+        manager.setPodSharedIndexInformer(podSharedIndexInformer);
+//        manager.run();
+        //    manager.setPodSharedIndexInformer(podSharedIndexInformer);
+        //kubernetesClient = manager.getKubernetesClient();
+        // getController().clone()
         manager.run();
     }
 
