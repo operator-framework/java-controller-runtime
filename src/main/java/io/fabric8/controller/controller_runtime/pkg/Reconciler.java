@@ -14,6 +14,7 @@
 
 package io.fabric8.controller.controller_runtime.pkg;
 
+
 /**
  * Reconciler defines interface for reconciling resource. Users are expected to implement this
  * interface to develop their own controllers watching events on resources. A reconciler works by
@@ -37,3 +38,4 @@ public interface Reconciler {
      */
     Result reconcile(Request request);
 }
+

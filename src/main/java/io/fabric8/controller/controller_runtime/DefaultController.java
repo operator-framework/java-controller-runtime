@@ -17,8 +17,6 @@ package io.fabric8.controller.controller_runtime;
 import io.fabric8.controller.controller_runtime.pkg.Request;
 import io.fabric8.controller.controller_runtime.pkg.Reconciler;
 import io.fabric8.controller.controller_runtime.pkg.Result;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.concurrent.*;
@@ -28,13 +26,14 @@ public class DefaultController implements Controller {
 
     private Reconciler reconciler;
     private Request request;
-    private BlockingQueue<Request> workQueue =  new ArrayBlockingQueue<>(1024);
+    private BlockingQueue<Request> workQueue;
     private String name;
     private int workerCount;
     private ScheduledExecutorService workerThreadPool;
 
     /**
      * Instantiates a new Default controller.
+     *
      *
      * @param workQueue the work queue
      */
@@ -49,7 +48,7 @@ public class DefaultController implements Controller {
     @Override
     public void run() {
 
-        System.out.println("Running the controller");
+        System.out.println("Running the controllertt");
 
         if(!preFlightCheck()){
             log.error("Controller {} failed pre-run check, exiting..", this.name);
@@ -64,10 +63,13 @@ public class DefaultController implements Controller {
                     () -> {
                         log.debug("Starting controller {} worker {}..", this.name, workerIndex);
                         try {
+                            System.out.println("Thread started the controller"+workQueue.size());
                             Result result= null;
                             Request request = null;
+
                             request = workQueue.take();
                             result = reconciler.reconcile(request);
+                            //  workQueue.remove();
                         } catch (Throwable t) {
                             log.error("Unexpected controller loop abortion", t);
                         }
@@ -75,7 +77,7 @@ public class DefaultController implements Controller {
                         log.debug("Exiting controller {} worker {}..", this.name, workerIndex);
                     },
                     0,
-                    1   ,
+                    1,
                     TimeUnit.SECONDS);
         }
     }
