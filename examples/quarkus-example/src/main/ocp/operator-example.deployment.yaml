@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: operator-example
+spec:
+  selector:
+    matchLabels:
+      app: operator-example
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: operator-example
+    spec:
+      serviceAccountName: operator-example
+      containers:
+        - image: image-registry.openshift-image-registry.svc:5000/default/operator-example:1.0-SNAPSHOT
+          name: operator-example
+          imagePullPolicy: IfNotPresent
