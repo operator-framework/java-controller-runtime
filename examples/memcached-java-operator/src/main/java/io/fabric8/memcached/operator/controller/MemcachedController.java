@@ -1,17 +1,3 @@
-// Copyright 2020 The Operator-SDK Authors
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package io.fabric8.memcached.operator.controller;
 
 import io.fabric8.controller.controller_runtime.Controller;
@@ -45,7 +31,7 @@ public class MemcachedController<T> {
     private BlockingQueue<Request> workQueue;
     private Lister<Memcached> memcachedLister;
     private Lister<Pod> podLister;
-    //    private Lister<T> tLister;
+//    private Lister<T> tLister;
     private Controller[] controllers;
     SharedInformerFactory sharedInformerFactory;
     private int workerCount = 2;
@@ -86,7 +72,7 @@ public class MemcachedController<T> {
             @Override
             public void onAdd(Memcached memcached) {
 
-                enQueueMemcached(memcached);
+                  enQueueMemcached(memcached);
 //                String key = Cache.metaNamespaceKeyFunc(memcached);
 //                if(key!=null || !(key.isEmpty())) {
 //                    HasMetadata h = (HasMetadata) memcached;
@@ -100,7 +86,7 @@ public class MemcachedController<T> {
 
             @Override
             public void onUpdate(Memcached memcached, Memcached newMemcached) {
-                //   enQueueMemcached(newMemcached);
+             //   enQueueMemcached(newMemcached);
             }
 
             @Override
@@ -151,9 +137,9 @@ public class MemcachedController<T> {
         Manager manager = new Manager(sharedInformerFactory,controllers,workQueue);
         manager.setPodSharedIndexInformer(podSharedIndexInformer);
 //        manager.run();
-        //    manager.setPodSharedIndexInformer(podSharedIndexInformer);
+    //    manager.setPodSharedIndexInformer(podSharedIndexInformer);
         //kubernetesClient = manager.getKubernetesClient();
-        // getController().clone()
+       // getController().clone()
         manager.run();
     }
 

@@ -2,6 +2,8 @@ package io.fabric8.memcached.operator;
 
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentList;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
@@ -69,7 +71,8 @@ public class MemcachedMain {
 
         SharedInformerFactory sharedInformerFactory = kubernetesClient.informers();
 
-        SharedIndexInformer<Pod> podSharedIndexInformer =  sharedInformerFactory.sharedIndexInformerFor(Pod.class, PodList.class,1 * 60 * 1000);
+//        SharedIndexInformer<Pod> podSharedIndexInformer =  sharedInformerFactory.sharedIndexInformerFor(Pod.class, PodList.class,1 * 60 * 1000);
+        SharedIndexInformer<Deployment> podSharedIndexInformer =  sharedInformerFactory.sharedIndexInformerFor(Deployment.class, DeploymentList.class,1 * 60 * 1000);
 
         SharedIndexInformer<Memcached> memcachedSharedIndexInformer = sharedInformerFactory
                 .sharedIndexInformerForCustomResource(customResourceDefinitionContext,Memcached.class, MemcachedList.class,1 * 60 * 1000);
